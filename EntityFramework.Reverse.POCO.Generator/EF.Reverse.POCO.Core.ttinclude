@@ -143,6 +143,8 @@
             var isSupported = float.Parse(frameworkVersion, nfi);
             return isSupported <= TargetFrameworkVersion;
         };
+
+		public static bool UseInputOutput;
     };
 
     const string CodeGeneratedAttribute = "[System.CodeDom.Compiler.GeneratedCode(\"EF.Reverse.POCO.Generator\", \"2.36.1.0\")]";
@@ -3929,7 +3931,7 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
         foreach (var p in sp.Parameters.OrderBy(x => x.Ordinal))
         {
             sb.AppendFormat("{0}{1}, ",
-                p.Mode == StoredProcedureParameterMode.In ? "" : "out ",
+                p.Mode == StoredProcedureParameterMode.In ? "" : !Settings.UseInputOutput ? "out " : "ref ",
                 p.NameHumanCase);
         }
         sb.Append("out procResult");
@@ -3967,7 +3969,7 @@ SELECT  SERVERPROPERTY('Edition') AS Edition,
                 + $" {{ ParameterName = \"{p.Name}\", "
                 + (isGeography ? "UdtTypeName = \"geography\"" : $"SqlDbType = System.Data.SqlDbType.{p.SqlDbType}")
                 + ", Direction = System.Data.ParameterDirection."
-                + (p.Mode == StoredProcedureParameterMode.In ? "Input" : "Output")
+                + (p.Mode == StoredProcedureParameterMode.In ? "Input" : !Settings.UseInputOutput ? "Output" : "InputOutput")
                 + (p.Mode == StoredProcedureParameterMode.In
                     ? ", Value = " + (isGeography
                         ? $"Microsoft.SqlServer.Types.SqlGeography.Parse({p.NameHumanCase}.AsText())"
